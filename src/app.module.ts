@@ -8,6 +8,7 @@ import Joi from 'joi';
 import { HealthModule } from './health/health.module';
 import { SmsModule } from './sms/sms.module';
 import { PropertiesModule } from './properties/properties.module';
+import { RoomTemplatesModule } from './room-templates/room-templates.module';
 
 @Module({
   imports: [
@@ -34,8 +35,9 @@ import { PropertiesModule } from './properties/properties.module';
     AuthModule,
     SmsModule,
     PropertiesModule,
+    RoomTemplatesModule,
   ],
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule {}
+export class AppModule { }

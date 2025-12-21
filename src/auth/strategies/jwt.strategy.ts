@@ -23,8 +23,6 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       ignoreExpiration: false,
       secretOrKey: jwtSecret,
     });
-
-    this.logger.log(`JWT Secret loaded: ${jwtSecret.substring(0, 10)}...`);
   }
 
   async validate(payload: any) {

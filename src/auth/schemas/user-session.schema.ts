@@ -6,14 +6,14 @@ export type UserSessionDocument = UserSession & Document;
 @Schema({ timestamps: true })
 export class UserSession {
   // id is automatically created by MongoDB as _id
-  @Prop({ type: Types.ObjectId, required: true, index: true, ref: 'User' })
+  @Prop({ type: Types.ObjectId, required: true, ref: 'User' })
   userId: Types.ObjectId;
 
-  @Prop({ required: true, unique: true })
+  @Prop({ required: true })
   nonce: string;
 
   // createdAt is automatically added by timestamps: true
-  @Prop({ required: true, index: { expireAfterSeconds: 0 } })
+  @Prop({ required: true })
   expiredAt: Date;
 }
 

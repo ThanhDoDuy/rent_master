@@ -6,7 +6,7 @@ export type PropertyDocument = Property & Document;
 @Schema({ timestamps: true })
 export class Property {
   // id is automatically created by MongoDB as _id
-  @Prop({ type: Types.ObjectId, required: true, ref: 'Account', index: true })
+  @Prop({ type: Types.ObjectId, required: true, ref: 'Account' })
   accountId: Types.ObjectId;
 
   @Prop({ required: true })

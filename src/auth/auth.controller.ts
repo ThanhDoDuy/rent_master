@@ -9,7 +9,6 @@ import {
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
-import { UserGuard } from '../common/guards/user.guard';
 import { UserId } from '../common/decorators/user-id.decorator';
 import { ResendOTPDto, SendOTPDto } from './dto/send-otp.dto';
 import { VerifyTOTPDto } from './dto/verify-otp.dto';
@@ -19,7 +18,7 @@ export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Get('me')
-  @UseGuards(JwtAuthGuard, UserGuard)
+  @UseGuards(JwtAuthGuard)
   async getMe(@UserId() userId: string) {
     return this.authService.getMeUser(userId);
   }

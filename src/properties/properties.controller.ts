@@ -14,11 +14,10 @@ import { PropertiesService } from './properties.service';
 import { CreatePropertyDto } from './dto/create-property.dto';
 import { UpdatePropertyDto } from './dto/update-property.dto';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
-import { UserGuard } from '../common/guards/user.guard';
 import { AccountId } from '../common/decorators/account-id.decorator';
 
 @Controller('properties')
-@UseGuards(JwtAuthGuard, UserGuard)
+@UseGuards(JwtAuthGuard)
 export class PropertiesController {
   constructor(private readonly propertiesService: PropertiesService) {}
 
