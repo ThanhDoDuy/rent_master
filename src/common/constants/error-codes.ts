@@ -31,6 +31,14 @@ export enum ErrorCode {
 
   // Room Template errors (TEMPLATE_*)
   TEMPLATE_IN_USE = 'TEMPLATE_IN_USE',
+
+  // Room errors (ROOM_*)
+  ROOM_IN_USE = 'ROOM_IN_USE',
+
+  // Tenant errors (TENANT_*)
+  TENANT_HAS_CONTRACT_HISTORY = 'TENANT_HAS_CONTRACT_HISTORY',
+  TENANT_PHONE_DUPLICATE = 'TENANT_PHONE_DUPLICATE',
+  TENANT_DOCUMENT_DUPLICATE = 'TENANT_DOCUMENT_DUPLICATE',
 }
 
 /**
@@ -56,4 +64,11 @@ export const ErrorMessages: Record<ErrorCode, string> = {
   [ErrorCode.PROPERTY_IN_USE]: 'Tài sản đang được sử dụng (có phòng hoặc hợp đồng)',
 
   [ErrorCode.TEMPLATE_IN_USE]: 'Template đang được sử dụng (có phòng hoặc hợp đồng)',
+
+  [ErrorCode.ROOM_IN_USE]: 'Phòng đang được sử dụng (có hợp đồng)',
+
+  [ErrorCode.TENANT_HAS_CONTRACT_HISTORY]: 'Không thể xóa tenant đã có lịch sử hợp đồng',
+
+  [ErrorCode.TENANT_PHONE_DUPLICATE]: 'Số điện thoại đã tồn tại trong hệ thống',
+  [ErrorCode.TENANT_DOCUMENT_DUPLICATE]: 'Số giấy tờ đã tồn tại trong hệ thống',
 };

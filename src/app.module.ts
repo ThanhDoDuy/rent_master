@@ -9,6 +9,8 @@ import { HealthModule } from './health/health.module';
 import { SmsModule } from './sms/sms.module';
 import { PropertiesModule } from './properties/properties.module';
 import { RoomTemplatesModule } from './room-templates/room-templates.module';
+import { RoomsModule } from './rooms/rooms.module';
+import { TenantsModule } from './tenants/tenants.module';
 
 @Module({
   imports: [
@@ -36,6 +38,8 @@ import { RoomTemplatesModule } from './room-templates/room-templates.module';
     SmsModule,
     PropertiesModule,
     RoomTemplatesModule,
+    RoomsModule,
+    TenantsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
