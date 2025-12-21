@@ -5,20 +5,22 @@ export type UserSessionDocument = UserSession & Document;
 
 @Schema({ timestamps: true })
 export class UserSession {
-  @Prop({ type: Types.ObjectId, required: true, index: true, ref: 'Tenant' })
-  tenantId: Types.ObjectId;
+  // id is automatically created by MongoDB as _id
+  @Prop({ type: Types.ObjectId, required: true, index: true, ref: 'User' })
+  userId: Types.ObjectId;
 
   @Prop({ required: true, unique: true })
   nonce: string;
 
-  @Prop({ default: Date.now, expires: 604800 }) // 7 days TTL
-  expiresAt: Date;
+  // createdAt is automatically added by timestamps: true
+  @Prop({ required: true, index: { expireAfterSeconds: 0 } })
+  expiredAt: Date;
 }
 
 export const UserSessionSchema = SchemaFactory.createForClass(UserSession);
 
 // Indexes
-UserSessionSchema.index({ tenantId: 1 });
+UserSessionSchema.index({ userId: 1 });
 UserSessionSchema.index({ nonce: 1 }, { unique: true });
-UserSessionSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
+UserSessionSchema.index({ expiredAt: 1 }, { expireAfterSeconds: 0 });
 

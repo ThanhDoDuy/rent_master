@@ -1,6 +1,8 @@
-import { Injectable, BadRequestException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { RateLimiterRedis, RateLimiterMemory } from 'rate-limiter-flexible';
 import Redis from 'ioredis';
+import { AppBadRequestException } from '../exceptions/app.exception';
+import { ErrorCode } from '../constants/error-codes';
 
 @Injectable()
 export class RateLimiterHelper {
@@ -37,8 +39,10 @@ export class RateLimiterHelper {
     try {
       await this.rateLimiter.consume(key, points);
     } catch (rateLimiterRes: any) {
-      throw new BadRequestException(
-        `Too many requests. Please wait ${Math.ceil(rateLimiterRes.msBeforeNext / 1000)} seconds.`,
+      const waitSeconds = Math.ceil(rateLimiterRes.msBeforeNext / 1000);
+      throw new AppBadRequestException(
+        ErrorCode.RATE_LIMIT_TOO_MANY_REQUESTS,
+        `Quá nhiều yêu cầu. Vui lòng thử lại sau ${waitSeconds} giây.`,
       );
     }
   }

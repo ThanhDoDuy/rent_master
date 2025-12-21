@@ -4,56 +4,41 @@ import {
   Get,
   Body,
   UseGuards,
-  UsePipes,
-  ValidationPipe,
-  UseInterceptors,
   HttpCode,
-  Res,
+  HttpStatus,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { RegisterDto } from './dto/register.dto';
-import { LoginDto, AuthDataResponse } from './dto/login.dto';
-import { Public } from '../common/decorators/public.decorator';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
-import { TenantGuard } from '../common/guards/tenant.guard';
-import { TenantId } from '../common/decorators/tenant-id.decorator';
-import { TransformInterceptor } from '../common/interceptors/response.interceptor';
+import { UserGuard } from '../common/guards/user.guard';
+import { UserId } from '../common/decorators/user-id.decorator';
+import { ResendOTPDto, SendOTPDto } from './dto/send-otp.dto';
+import { VerifyTOTPDto } from './dto/verify-otp.dto';
 
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
-  @Public()
-  @Post('register')
-  @UsePipes(new ValidationPipe())
-  async register(@Body() registerDto: RegisterDto) {
-    return this.authService.register(registerDto);
-  }
-
-  @Public()
-  @HttpCode(200)
-  @UseInterceptors(TransformInterceptor)
-  @Post('login')
-  async login(
-    @Body() loginDto: LoginDto,
-    @Res({ passthrough: true }) response,
-  ): Promise<{ message: string }> {
-    const {
-      sessionToken,
-      options,
-      sessionCookieName,
-      tenantId,
-    } = await this.authService.login(loginDto);
-
-    response.cookie(sessionCookieName, sessionToken, options);
-    response.cookie('tenantId', tenantId, options);
-
-    return { message: 'ok' };
-  }
-
   @Get('me')
-  @UseGuards(JwtAuthGuard, TenantGuard)
-  async getMe(@TenantId() tenantId: string) {
-    return this.authService.getMe(tenantId);
+  @UseGuards(JwtAuthGuard, UserGuard)
+  async getMe(@UserId() userId: string) {
+    return this.authService.getMeUser(userId);
+  }
+
+  @Post('send-otp')
+  @HttpCode(HttpStatus.OK)
+  async sendOTP(@Body() dto: SendOTPDto) {
+    return this.authService.sendOTP(dto);
+  }
+
+  @Post('resend-otp')
+  @HttpCode(HttpStatus.OK)
+  async resendOTP(@Body() dto: ResendOTPDto) {
+    return this.authService.sendOTP(dto);
+  }
+
+  @Post('verify-otp')
+  @HttpCode(HttpStatus.OK)
+  async verifyTOTP(@Body() dto: VerifyTOTPDto) {
+    return this.authService.verifyTOTP(dto);
   }
 }

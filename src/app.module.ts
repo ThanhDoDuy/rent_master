@@ -1,26 +1,26 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
-import { ScheduleModule } from '@nestjs/schedule';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
-import { LandlordsModule } from './landlords/landlords.module';
-import { BuildingsModule } from './buildings/buildings.module';
-import { RoomsModule } from './rooms/rooms.module';
-import { TenantProfilesModule } from './tenant-profiles/tenant-profiles.module';
-import { ContractsModule } from './contracts/contracts.module';
-import { MeterReadingsModule } from './meter-readings/meter-readings.module';
-import { BillingModule } from './billing/billing.module';
-import { InvoicesModule } from './invoices/invoices.module';
-import { PaymentsModule } from './payments/payments.module';
-import { ReportsModule } from './reports/reports.module';
+import Joi from 'joi';
+import { HealthModule } from './health/health.module';
+import { SmsModule } from './sms/sms.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: '.env',
+      validationSchema: Joi.object({
+        NODE_ENV: Joi.string().required(),
+        ACCOUNT_SID: Joi.string().required(),
+        AUTH_TOKEN: Joi.string().required(),
+        FROM_PHONE_NUMBER: Joi.string().required(),
+        CONTENT_SID: Joi.string().required(),
+        CORS_WHITELIST: Joi.string().required(),
+      }),
     }),
     MongooseModule.forRootAsync({
       imports: [ConfigModule],
@@ -29,18 +29,9 @@ import { ReportsModule } from './reports/reports.module';
       }),
       inject: [ConfigService],
     }),
-    ScheduleModule.forRoot(),
+    HealthModule,
     AuthModule,
-    LandlordsModule,
-    BuildingsModule,
-    RoomsModule,
-    TenantProfilesModule,
-    ContractsModule,
-    MeterReadingsModule,
-    BillingModule,
-    InvoicesModule,
-    PaymentsModule,
-    ReportsModule,
+    SmsModule
   ],
   controllers: [AppController],
   providers: [AppService],
