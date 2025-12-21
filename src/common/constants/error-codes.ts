@@ -39,7 +39,7 @@ export enum ErrorCode {
   TENANT_HAS_CONTRACT_HISTORY = 'TENANT_HAS_CONTRACT_HISTORY',
   TENANT_PHONE_DUPLICATE = 'TENANT_PHONE_DUPLICATE',
   TENANT_DOCUMENT_DUPLICATE = 'TENANT_DOCUMENT_DUPLICATE',
-  
+
   // Contract errors (CONTRACT_*)
   CONTRACT_ROOM_ALREADY_ACTIVE = 'CONTRACT_ROOM_ALREADY_ACTIVE',
   CONTRACT_INVALID_DATES = 'CONTRACT_INVALID_DATES',
@@ -48,6 +48,18 @@ export enum ErrorCode {
   CONTRACT_CANNOT_REMOVE_PRIMARY = 'CONTRACT_CANNOT_REMOVE_PRIMARY',
   CONTRACT_INVALID_STATUS = 'CONTRACT_INVALID_STATUS',
   CONTRACT_NO_PRIMARY_TENANT = 'CONTRACT_NO_PRIMARY_TENANT',
+
+  // Invoice errors (INVOICE_*)
+  INVOICE_NOT_DRAFT = 'INVOICE_NOT_DRAFT',
+  INVOICE_INVALID_METER_READING = 'INVOICE_INVALID_METER_READING',
+  INVOICE_METER_READING_REQUIRED = 'INVOICE_METER_READING_REQUIRED',
+  INVOICE_CANNOT_VOID = 'INVOICE_CANNOT_VOID',
+  INVOICE_NOT_PAYABLE = 'INVOICE_NOT_PAYABLE',
+  INVOICE_ALREADY_PAID = 'INVOICE_ALREADY_PAID',
+
+  // Payment errors (PAYMENT_*)
+  PAYMENT_INVALID_AMOUNT = 'PAYMENT_INVALID_AMOUNT',
+  PAYMENT_AMOUNT_EXCEEDS_REMAINING = 'PAYMENT_AMOUNT_EXCEEDS_REMAINING',
 }
 
 /**
@@ -79,7 +91,7 @@ export const ErrorMessages: Record<ErrorCode, string> = {
   [ErrorCode.TENANT_HAS_CONTRACT_HISTORY]: 'Không thể xóa tenant đã có lịch sử hợp đồng',
   [ErrorCode.TENANT_PHONE_DUPLICATE]: 'Số điện thoại đã tồn tại trong hệ thống',
   [ErrorCode.TENANT_DOCUMENT_DUPLICATE]: 'Số giấy tờ đã tồn tại trong hệ thống',
-  
+
   [ErrorCode.CONTRACT_ROOM_ALREADY_ACTIVE]: 'Phòng đã có hợp đồng đang hoạt động',
   [ErrorCode.CONTRACT_INVALID_DATES]: 'Ngày bắt đầu phải trước ngày kết thúc',
   [ErrorCode.CONTRACT_TENANT_ALREADY_LINKED]: 'Tenant đã được thêm vào hợp đồng',
@@ -87,4 +99,14 @@ export const ErrorMessages: Record<ErrorCode, string> = {
   [ErrorCode.CONTRACT_CANNOT_REMOVE_PRIMARY]: 'Không thể xóa PRIMARY tenant khi hợp đồng đang ACTIVE',
   [ErrorCode.CONTRACT_INVALID_STATUS]: 'Trạng thái hợp đồng không hợp lệ cho thao tác này',
   [ErrorCode.CONTRACT_NO_PRIMARY_TENANT]: 'Hợp đồng phải có PRIMARY tenant trước khi kích hoạt',
+
+  [ErrorCode.INVOICE_NOT_DRAFT]: 'Invoice không ở trạng thái DRAFT',
+  [ErrorCode.INVOICE_INVALID_METER_READING]: 'Chỉ số đồng hồ không hợp lệ (phải >= chỉ số cũ)',
+  [ErrorCode.INVOICE_METER_READING_REQUIRED]: 'Cần nhập chỉ số đồng hồ cho các dịch vụ METERED',
+  [ErrorCode.INVOICE_CANNOT_VOID]: 'Không thể hủy invoice đã ISSUED hoặc PAID',
+  [ErrorCode.INVOICE_NOT_PAYABLE]: 'Invoice không thể nhận thanh toán (phải ở trạng thái ISSUED hoặc PARTIALLY_PAID)',
+  [ErrorCode.INVOICE_ALREADY_PAID]: 'Invoice đã được thanh toán đủ, không thể tạo payment thêm',
+  
+  [ErrorCode.PAYMENT_INVALID_AMOUNT]: 'Số tiền thanh toán phải lớn hơn 0',
+  [ErrorCode.PAYMENT_AMOUNT_EXCEEDS_REMAINING]: 'Số tiền thanh toán vượt quá số tiền còn lại của invoice',
 };

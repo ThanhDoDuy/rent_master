@@ -12,6 +12,8 @@ import { RoomTemplatesModule } from './room-templates/room-templates.module';
 import { RoomsModule } from './rooms/rooms.module';
 import { TenantsModule } from './tenants/tenants.module';
 import { ContractsModule } from './contracts/contracts.module';
+import { InvoicesModule } from './invoices/invoices.module';
+import { PaymentsModule } from './payments/payments.module';
 
 @Module({
   imports: [
@@ -42,6 +44,8 @@ import { ContractsModule } from './contracts/contracts.module';
     RoomsModule,
     TenantsModule,
     ContractsModule,
+    InvoicesModule,
+    PaymentsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
