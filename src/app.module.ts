@@ -7,6 +7,7 @@ import { AuthModule } from './auth/auth.module';
 import Joi from 'joi';
 import { HealthModule } from './health/health.module';
 import { SmsModule } from './sms/sms.module';
+import { PropertiesModule } from './properties/properties.module';
 
 @Module({
   imports: [
@@ -31,7 +32,8 @@ import { SmsModule } from './sms/sms.module';
     }),
     HealthModule,
     AuthModule,
-    SmsModule
+    SmsModule,
+    PropertiesModule,
   ],
   controllers: [AppController],
   providers: [AppService],

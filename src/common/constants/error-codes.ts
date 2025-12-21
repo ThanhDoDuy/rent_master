@@ -1,15 +1,10 @@
 /**
  * Error codes for the application
  * Format: MODULE_ACTION_ERROR
- * Example: AUTH_LOGIN_INVALID_CREDENTIALS
+ * Example: AUTH_OTP_INVALID_OR_EXPIRED
  */
 export enum ErrorCode {
   // Auth errors (AUTH_*)
-  AUTH_LOGIN_INVALID_CREDENTIALS = 'AUTH_LOGIN_INVALID_CREDENTIALS',
-  AUTH_LOGIN_ACCOUNT_NOT_VERIFIED = 'AUTH_LOGIN_ACCOUNT_NOT_VERIFIED',
-  AUTH_REGISTER_EMAIL_OR_PHONE_EXISTS = 'AUTH_REGISTER_EMAIL_OR_PHONE_EXISTS',
-  AUTH_REGISTER_INVALID_OTP = 'AUTH_REGISTER_INVALID_OTP',
-  AUTH_REGISTER_USER_EXISTS = 'AUTH_REGISTER_USER_EXISTS',
   AUTH_OTP_INVALID_OR_EXPIRED = 'AUTH_OTP_INVALID_OR_EXPIRED',
   AUTH_OTP_VERIFY_FAILED = 'AUTH_OTP_VERIFY_FAILED',
   AUTH_TOKEN_INVALID_OR_EXPIRED = 'AUTH_TOKEN_INVALID_OR_EXPIRED',
@@ -30,17 +25,15 @@ export enum ErrorCode {
   GENERIC_NOT_FOUND = 'GENERIC_NOT_FOUND',
   GENERIC_UNAUTHORIZED = 'GENERIC_UNAUTHORIZED',
   GENERIC_FORBIDDEN = 'GENERIC_FORBIDDEN',
+  
+  // Property errors (PROPERTY_*)
+  PROPERTY_IN_USE = 'PROPERTY_IN_USE',
 }
 
 /**
  * Error messages mapping
  */
 export const ErrorMessages: Record<ErrorCode, string> = {
-  [ErrorCode.AUTH_LOGIN_INVALID_CREDENTIALS]: 'Email hoặc mật khẩu không đúng',
-  [ErrorCode.AUTH_LOGIN_ACCOUNT_NOT_VERIFIED]: 'Tài khoản chưa được xác thực. Vui lòng xác thực số điện thoại trước khi đăng nhập.',
-  [ErrorCode.AUTH_REGISTER_EMAIL_OR_PHONE_EXISTS]: 'Email hoặc số điện thoại đã được đăng ký',
-  [ErrorCode.AUTH_REGISTER_INVALID_OTP]: 'Mã OTP không hợp lệ',
-  [ErrorCode.AUTH_REGISTER_USER_EXISTS]: 'Người dùng đã tồn tại',
   [ErrorCode.AUTH_OTP_INVALID_OR_EXPIRED]: 'Mã OTP không hợp lệ hoặc đã hết hạn',
   [ErrorCode.AUTH_OTP_VERIFY_FAILED]: 'Xác thực OTP thất bại',
   [ErrorCode.AUTH_TOKEN_INVALID_OR_EXPIRED]: 'Token không hợp lệ hoặc đã hết hạn',
@@ -56,4 +49,6 @@ export const ErrorMessages: Record<ErrorCode, string> = {
   [ErrorCode.GENERIC_NOT_FOUND]: 'Không tìm thấy',
   [ErrorCode.GENERIC_UNAUTHORIZED]: 'Không được phép truy cập',
   [ErrorCode.GENERIC_FORBIDDEN]: 'Bị cấm truy cập',
+  
+  [ErrorCode.PROPERTY_IN_USE]: 'Tài sản đang được sử dụng (có phòng hoặc hợp đồng)',
 };

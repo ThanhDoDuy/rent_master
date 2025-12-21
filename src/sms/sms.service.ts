@@ -35,13 +35,13 @@ export class SmsService {
         `Sending SMS from ${from} to ${to} using content SID: ${this.templateId}`,
       );
       const body = `Your verification code is ${data.otp}. Do not share this code.`;
-      const result = await this.client.messages.create({
-        from,
-        to,
-        body,
-      });
+      // const result = await this.client.messages.create({
+      //   from,
+      //   to,
+      //   body,
+      // });
 
-      this.logger.log(`✅ SMS sent to ${to} | SID: ${result.sid}`);
+      this.logger.log(`✅ SMS sent to ${to} | OTP: ${data.otp}`);
     } catch (error) {
       const errorDetails = {
         message: error?.message || 'Unknown error',

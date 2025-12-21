@@ -1,4 +1,4 @@
-import { IsString, IsNotEmpty, Matches, Length } from 'class-validator';
+import { IsString, IsNotEmpty, Length } from 'class-validator';
 
 export class VerifyTOTPDto {
   @IsString()
