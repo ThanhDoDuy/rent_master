@@ -12,6 +12,7 @@ import { Tenant, TenantDocument } from '../tenants/schemas/tenant.schema';
 import { CreateContractDto } from './dto/create-contract.dto';
 import { AddTenantDto } from './dto/add-tenant.dto';
 import { TerminateContractDto } from './dto/terminate-contract.dto';
+import { ActivateContractDto } from './dto/activate-contract.dto';
 import { AppBadRequestException } from '../common/exceptions/app.exception';
 import { ErrorCode } from '../common/constants/error-codes';
 
@@ -200,7 +201,11 @@ export class ContractsService {
     return { status: 'REMOVED' };
   }
 
-  async activate(contractId: string, accountId: string): Promise<{ status: string }> {
+  async activate(
+    contractId: string,
+    activateDto: ActivateContractDto,
+    accountId: string,
+  ): Promise<{ status: string }> {
     this.logger.log(`Activating contract ${contractId}`);
 
     // Check contract exists and belongs to account
@@ -251,6 +256,32 @@ export class ContractsService {
       throw new NotFoundException('Room not found');
     }
 
+    // Check if room has METERED services
+    const meteredServices = room.templateSnapshot.services?.filter(
+      (s: any) => s.type === 'METERED',
+    ) || [];
+
+    // Validate: If there are METERED services, initialMeterReadings is required
+    if (meteredServices.length > 0) {
+      if (!activateDto.initialMeterReadings || activateDto.initialMeterReadings.length === 0) {
+        throw new AppBadRequestException(ErrorCode.CONTRACT_INITIAL_METER_READINGS_REQUIRED);
+      }
+
+      // Validate: All METERED services must have initial readings
+      const providedKeys = new Set(
+        activateDto.initialMeterReadings.map((r) => r.key),
+      );
+      const requiredKeys = meteredServices.map((s: any) => s.key || s.name);
+      const missingKeys = requiredKeys.filter((key) => !providedKeys.has(key));
+
+      if (missingKeys.length > 0) {
+        throw new AppBadRequestException(
+          ErrorCode.CONTRACT_INITIAL_METER_READINGS_INCOMPLETE,
+          `Missing initial meter readings for: ${missingKeys.join(', ')}`,
+        );
+      }
+    }
+
     // Create pricing snapshot from room templateSnapshot
     const pricingSnapshot = {
       templateId: room.templateSnapshot.templateId,
@@ -269,6 +300,23 @@ export class ContractsService {
         },
       },
     );
+
+    // Set initial meter readings (required if METERED services exist)
+    if (activateDto.initialMeterReadings && activateDto.initialMeterReadings.length > 0) {
+      // Merge with existing meterReadings if any
+      const existingMeterReadings = room.meterReadings || {};
+      const meterReadings: { [key: string]: number } = { ...existingMeterReadings };
+      
+      for (const reading of activateDto.initialMeterReadings) {
+        meterReadings[reading.key] = reading.reading;
+      }
+
+      // Update room with initial meter readings
+      await this.roomModel.updateOne(
+        { _id: contract.roomId },
+        { $set: { meterReadings } },
+      );
+    }
 
     // Update room status to OCCUPIED
     await this.roomModel.updateOne(

@@ -37,6 +37,11 @@ export class Room {
     services?: any[];
   };
 
+  @Prop({ type: Object, required: false })
+  meterReadings?: {
+    [key: string]: number; // key = service key (e.g., "ELECTRICITY", "WATER"), value = lastReading
+  };
+
   @Prop({ required: false })
   note?: string;
 

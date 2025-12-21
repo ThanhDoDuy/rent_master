@@ -13,6 +13,7 @@ import { ContractsService } from './contracts.service';
 import { CreateContractDto } from './dto/create-contract.dto';
 import { AddTenantDto } from './dto/add-tenant.dto';
 import { TerminateContractDto } from './dto/terminate-contract.dto';
+import { ActivateContractDto } from './dto/activate-contract.dto';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { AccountId } from '../common/decorators/account-id.decorator';
 
@@ -54,8 +55,12 @@ export class ContractsController {
   }
 
   @Post(':id/activate')
-  async activate(@Param('id') id: string, @AccountId() accountId: string) {
-    return this.contractsService.activate(id, accountId);
+  async activate(
+    @Param('id') id: string,
+    @Body() activateDto: ActivateContractDto,
+    @AccountId() accountId: string,
+  ) {
+    return this.contractsService.activate(id, activateDto, accountId);
   }
 
   @Post(':id/end')

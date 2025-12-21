@@ -48,6 +48,8 @@ export enum ErrorCode {
   CONTRACT_CANNOT_REMOVE_PRIMARY = 'CONTRACT_CANNOT_REMOVE_PRIMARY',
   CONTRACT_INVALID_STATUS = 'CONTRACT_INVALID_STATUS',
   CONTRACT_NO_PRIMARY_TENANT = 'CONTRACT_NO_PRIMARY_TENANT',
+  CONTRACT_INITIAL_METER_READINGS_REQUIRED = 'CONTRACT_INITIAL_METER_READINGS_REQUIRED',
+  CONTRACT_INITIAL_METER_READINGS_INCOMPLETE = 'CONTRACT_INITIAL_METER_READINGS_INCOMPLETE',
 
   // Invoice errors (INVOICE_*)
   INVOICE_NOT_DRAFT = 'INVOICE_NOT_DRAFT',
@@ -99,6 +101,8 @@ export const ErrorMessages: Record<ErrorCode, string> = {
   [ErrorCode.CONTRACT_CANNOT_REMOVE_PRIMARY]: 'Không thể xóa PRIMARY tenant khi hợp đồng đang ACTIVE',
   [ErrorCode.CONTRACT_INVALID_STATUS]: 'Trạng thái hợp đồng không hợp lệ cho thao tác này',
   [ErrorCode.CONTRACT_NO_PRIMARY_TENANT]: 'Hợp đồng phải có PRIMARY tenant trước khi kích hoạt',
+  [ErrorCode.CONTRACT_INITIAL_METER_READINGS_REQUIRED]: 'Phòng có dịch vụ METERED, cần nhập chỉ số đồng hồ ban đầu',
+  [ErrorCode.CONTRACT_INITIAL_METER_READINGS_INCOMPLETE]: 'Thiếu chỉ số đồng hồ ban đầu cho một số dịch vụ METERED',
 
   [ErrorCode.INVOICE_NOT_DRAFT]: 'Invoice không ở trạng thái DRAFT',
   [ErrorCode.INVOICE_INVALID_METER_READING]: 'Chỉ số đồng hồ không hợp lệ (phải >= chỉ số cũ)',

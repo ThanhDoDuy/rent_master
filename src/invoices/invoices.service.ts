@@ -7,6 +7,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { Invoice, InvoiceDocument, InvoiceStatus, GeneratedBy } from './schemas/invoice.schema';
 import { Contract, ContractDocument, ContractStatus } from '../contracts/schemas/contract.schema';
+import { Room, RoomDocument } from '../rooms/schemas/room.schema';
 import { SubmitMeterReadingsDto } from './dto/submit-meter-readings.dto';
 import { AppBadRequestException } from '../common/exceptions/app.exception';
 import { ErrorCode } from '../common/constants/error-codes';
@@ -20,6 +21,8 @@ export class InvoicesService {
     private invoiceModel: Model<InvoiceDocument>,
     @InjectModel(Contract.name)
     private contractModel: Model<ContractDocument>,
+    @InjectModel(Room.name)
+    private roomModel: Model<RoomDocument>,
   ) {}
 
   async findByContract(
@@ -108,13 +111,18 @@ export class InvoicesService {
       throw new AppBadRequestException(ErrorCode.INVOICE_NOT_DRAFT);
     }
 
-    // Get contract to update lastReading
+    // Get contract and room
     const contract = await this.contractModel
       .findById(invoice.contractId)
       .exec();
 
     if (!contract || !contract.pricingSnapshot) {
       throw new NotFoundException('Contract or pricing snapshot not found');
+    }
+
+    const room = await this.roomModel.findById(contract.roomId).exec();
+    if (!room) {
+      throw new NotFoundException('Room not found');
     }
 
     // Update services with meter readings
@@ -137,15 +145,11 @@ export class InvoicesService {
       const usage = reading.endReading - lastReading;
       const amount = usage * service.price;
 
-      // Update contract's lastReading for this service
-      if (contract.pricingSnapshot && contract.pricingSnapshot.services) {
-        const contractService = contract.pricingSnapshot.services.find(
-          (s: any) => (s.key || s.name) === service.key,
-        );
-        if (contractService) {
-          contractService.lastReading = reading.endReading;
-        }
+      // Update room's meterReadings (single source of truth)
+      if (!room.meterReadings) {
+        room.meterReadings = {};
       }
+      room.meterReadings[service.key] = reading.endReading;
 
       return {
         ...service,
@@ -177,10 +181,10 @@ export class InvoicesService {
       },
     );
 
-    // Update contract's pricingSnapshot
-    await this.contractModel.updateOne(
-      { _id: contract._id },
-      { $set: { pricingSnapshot: contract.pricingSnapshot } },
+    // Update room's meterReadings (single source of truth)
+    await this.roomModel.updateOne(
+      { _id: room._id },
+      { $set: { meterReadings: room.meterReadings } },
     );
 
     return {
@@ -307,16 +311,27 @@ export class InvoicesService {
         continue;
       }
 
+      // Get room to get current meter readings
+      const room = await this.roomModel.findById(contract.roomId).exec();
+      if (!room) {
+        this.logger.warn(`Room ${contract.roomId} not found for contract ${contract._id}`);
+        continue;
+      }
+
       // Create invoice DRAFT
+      // Get lastReading from room.meterReadings (current value) instead of contract.pricingSnapshot
       const services = contract.pricingSnapshot.services?.map((s: any) => {
         const key = s.key || s.name;
+        // Get lastReading from room's current meterReadings
+        const lastReading = room.meterReadings?.[key] || null;
+        
         return {
           key,
           name: s.name,
           type: s.type,
           unit: s.unit,
           price: s.type === 'METERED' ? s.unitPrice : s.amount,
-          lastReading: s.lastReading || null,
+          lastReading, // From room.meterReadings (current value)
           endReading: null,
           usage: null,
           amount: s.type === 'FIXED' ? s.amount : null,
