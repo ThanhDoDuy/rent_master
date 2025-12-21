@@ -39,6 +39,15 @@ export enum ErrorCode {
   TENANT_HAS_CONTRACT_HISTORY = 'TENANT_HAS_CONTRACT_HISTORY',
   TENANT_PHONE_DUPLICATE = 'TENANT_PHONE_DUPLICATE',
   TENANT_DOCUMENT_DUPLICATE = 'TENANT_DOCUMENT_DUPLICATE',
+  
+  // Contract errors (CONTRACT_*)
+  CONTRACT_ROOM_ALREADY_ACTIVE = 'CONTRACT_ROOM_ALREADY_ACTIVE',
+  CONTRACT_INVALID_DATES = 'CONTRACT_INVALID_DATES',
+  CONTRACT_TENANT_ALREADY_LINKED = 'CONTRACT_TENANT_ALREADY_LINKED',
+  CONTRACT_PRIMARY_EXISTS = 'CONTRACT_PRIMARY_EXISTS',
+  CONTRACT_CANNOT_REMOVE_PRIMARY = 'CONTRACT_CANNOT_REMOVE_PRIMARY',
+  CONTRACT_INVALID_STATUS = 'CONTRACT_INVALID_STATUS',
+  CONTRACT_NO_PRIMARY_TENANT = 'CONTRACT_NO_PRIMARY_TENANT',
 }
 
 /**
@@ -68,7 +77,14 @@ export const ErrorMessages: Record<ErrorCode, string> = {
   [ErrorCode.ROOM_IN_USE]: 'Phòng đang được sử dụng (có hợp đồng)',
 
   [ErrorCode.TENANT_HAS_CONTRACT_HISTORY]: 'Không thể xóa tenant đã có lịch sử hợp đồng',
-
   [ErrorCode.TENANT_PHONE_DUPLICATE]: 'Số điện thoại đã tồn tại trong hệ thống',
   [ErrorCode.TENANT_DOCUMENT_DUPLICATE]: 'Số giấy tờ đã tồn tại trong hệ thống',
+  
+  [ErrorCode.CONTRACT_ROOM_ALREADY_ACTIVE]: 'Phòng đã có hợp đồng đang hoạt động',
+  [ErrorCode.CONTRACT_INVALID_DATES]: 'Ngày bắt đầu phải trước ngày kết thúc',
+  [ErrorCode.CONTRACT_TENANT_ALREADY_LINKED]: 'Tenant đã được thêm vào hợp đồng',
+  [ErrorCode.CONTRACT_PRIMARY_EXISTS]: 'Hợp đồng đã có PRIMARY tenant',
+  [ErrorCode.CONTRACT_CANNOT_REMOVE_PRIMARY]: 'Không thể xóa PRIMARY tenant khi hợp đồng đang ACTIVE',
+  [ErrorCode.CONTRACT_INVALID_STATUS]: 'Trạng thái hợp đồng không hợp lệ cho thao tác này',
+  [ErrorCode.CONTRACT_NO_PRIMARY_TENANT]: 'Hợp đồng phải có PRIMARY tenant trước khi kích hoạt',
 };

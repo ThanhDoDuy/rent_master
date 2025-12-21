@@ -11,6 +11,7 @@ import { PropertiesModule } from './properties/properties.module';
 import { RoomTemplatesModule } from './room-templates/room-templates.module';
 import { RoomsModule } from './rooms/rooms.module';
 import { TenantsModule } from './tenants/tenants.module';
+import { ContractsModule } from './contracts/contracts.module';
 
 @Module({
   imports: [
@@ -40,6 +41,7 @@ import { TenantsModule } from './tenants/tenants.module';
     RoomTemplatesModule,
     RoomsModule,
     TenantsModule,
+    ContractsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
