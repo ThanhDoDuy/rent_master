@@ -6,6 +6,7 @@ import {
 import { JwtService } from '@nestjs/jwt';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
+import { ConfigService } from '@nestjs/config';
 import { UserSession, UserSessionDocument } from './schemas/user-session.schema';
 import { Account, AccountDocument } from './schemas/account.schema';
 import { User, UserDocument, UserRole } from './schemas/user.schema';
@@ -17,6 +18,8 @@ import { SmsService } from 'src/sms/sms.service';
 import { VerifyTOTPDto } from './dto/verify-otp.dto';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
+import { ChangePasswordDto } from './dto/change-password.dto';
+import { AdminResetPasswordDto } from './dto/admin-reset-password.dto';
 import {
   AppBadRequestException,
 } from '../common/exceptions/app.exception';
@@ -34,6 +37,7 @@ export class AuthService {
     @Inject('SEND_OTP_RATE_LIMITER') private readonly sendOtpRateLimiter: RateLimiterHelper,
     private readonly otpHelper: OTPHelper,
     private readonly smsService: SmsService,
+    private readonly configService: ConfigService,
   ) {}
 
   async getMeUser(userId: string): Promise<{ id: string; email: string; phone?: string; role: string; accountId: string } | null> {
@@ -286,6 +290,94 @@ export class AuthService {
         throw error;
       }
       throw new AppBadRequestException(ErrorCode.AUTH_INVALID_CREDENTIALS);
+    }
+  }
+
+  async changePassword(userId: string, dto: ChangePasswordDto): Promise<{ message: string }> {
+    try {
+      Logger.log('AuthService changePassword => start', { userId });
+
+      // Find user
+      const user = await this.userModel.findById(userId).exec();
+      if (!user) {
+        throw new AppBadRequestException(ErrorCode.AUTH_USER_NOT_FOUND);
+      }
+
+      // Verify old password
+      const isOldPasswordValid = await bcrypt.compare(dto.oldPassword, user.password);
+      if (!isOldPasswordValid) {
+        throw new AppBadRequestException(ErrorCode.AUTH_OLD_PASSWORD_INCORRECT);
+      }
+
+      // Hash new password
+      const saltRounds = 10;
+      const hashedNewPassword = await bcrypt.hash(dto.newPassword, saltRounds);
+
+      // Update password
+      user.password = hashedNewPassword;
+      await user.save();
+
+      Logger.log('AuthService changePassword => success', { userId });
+
+      return {
+        message: 'Đổi mật khẩu thành công',
+      };
+    } catch (error) {
+      Logger.error('AuthService changePassword => failed', {
+        error: {
+          message: error.message,
+          stack: error.stack,
+          userId,
+        },
+      });
+      if (error instanceof AppBadRequestException) {
+        throw error;
+      }
+      throw new AppBadRequestException(ErrorCode.GENERIC_INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  async adminResetPassword(dto: AdminResetPasswordDto): Promise<{ message: string }> {
+    try {
+      Logger.log('AuthService adminResetPassword => start', { email: dto.email });
+
+      // Verify admin key
+      const adminKey = this.configService.get<string>('ADMIN_RESET_PASSWORD_KEY');
+      if (!adminKey || dto.adminKey !== adminKey) {
+        throw new AppBadRequestException(ErrorCode.AUTH_ADMIN_KEY_INVALID);
+      }
+
+      // Find user by email
+      const user = await this.userModel.findOne({ email: dto.email }).exec();
+      if (!user) {
+        throw new AppBadRequestException(ErrorCode.AUTH_USER_NOT_FOUND);
+      }
+
+      // Hash new password
+      const saltRounds = 10;
+      const hashedNewPassword = await bcrypt.hash(dto.newPassword, saltRounds);
+
+      // Update password
+      user.password = hashedNewPassword;
+      await user.save();
+
+      Logger.log('AuthService adminResetPassword => success', { email: dto.email });
+
+      return {
+        message: 'Đặt lại mật khẩu thành công',
+      };
+    } catch (error) {
+      Logger.error('AuthService adminResetPassword => failed', {
+        error: {
+          message: error.message,
+          stack: error.stack,
+          email: dto.email,
+        },
+      });
+      if (error instanceof AppBadRequestException) {
+        throw error;
+      }
+      throw new AppBadRequestException(ErrorCode.GENERIC_INTERNAL_SERVER_ERROR);
     }
   }
 }

@@ -81,12 +81,36 @@ docker-compose down -v
 
 ## 🔐 Authentication
 
+### Current Flow (Email/Password)
+
+**Register** (`POST /auth/register`):
+- Email (required, unique)
+- Password (min 6 characters)
+- Phone (optional)
+- Returns: sessionToken + user info
+
+**Login** (`POST /auth/login`):
+- Email + Password
+- Returns: sessionToken + user info (7 days session)
+
+**Get Me** (`GET /auth/me`):
+- Get current user info
+- Requires JWT token
+
+**Change Password** (`PUT /auth/change-password`):
+- Old password + New password
+- Requires JWT token
+
+### JWT Authentication
+
 All endpoints except `/auth/register` and `/auth/login` require JWT authentication.
 
 Include the token in the Authorization header:
 ```
 Authorization: Bearer <your-jwt-token>
 ```
+
+Token contains: userId, accountId, role, nonce (validated against database session)
 
 ## 📚 API Endpoints
 

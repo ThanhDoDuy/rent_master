@@ -2,6 +2,7 @@ import {
   Controller,
   Post,
   Get,
+  Put,
   Body,
   UseGuards,
   HttpCode,
@@ -14,6 +15,8 @@ import { ResendOTPDto, SendOTPDto } from './dto/send-otp.dto';
 import { VerifyTOTPDto } from './dto/verify-otp.dto';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
+import { ChangePasswordDto } from './dto/change-password.dto';
+import { AdminResetPasswordDto } from './dto/admin-reset-password.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -53,5 +56,18 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   async login(@Body() dto: LoginDto) {
     return this.authService.login(dto);
+  }
+
+  @Put('change-password')
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.OK)
+  async changePassword(@UserId() userId: string, @Body() dto: ChangePasswordDto) {
+    return this.authService.changePassword(userId, dto);
+  }
+
+  @Put('admin/reset-password')
+  @HttpCode(HttpStatus.OK)
+  async adminResetPassword(@Body() dto: AdminResetPasswordDto) {
+    return this.authService.adminResetPassword(dto);
   }
 }
