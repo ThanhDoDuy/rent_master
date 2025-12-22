@@ -12,6 +12,8 @@ import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { UserId } from '../common/decorators/user-id.decorator';
 import { ResendOTPDto, SendOTPDto } from './dto/send-otp.dto';
 import { VerifyTOTPDto } from './dto/verify-otp.dto';
+import { RegisterDto } from './dto/register.dto';
+import { LoginDto } from './dto/login.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -39,5 +41,17 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   async verifyTOTP(@Body() dto: VerifyTOTPDto) {
     return this.authService.verifyTOTP(dto);
+  }
+
+  @Post('register')
+  @HttpCode(HttpStatus.CREATED)
+  async register(@Body() dto: RegisterDto) {
+    return this.authService.register(dto);
+  }
+
+  @Post('login')
+  @HttpCode(HttpStatus.OK)
+  async login(@Body() dto: LoginDto) {
+    return this.authService.login(dto);
   }
 }

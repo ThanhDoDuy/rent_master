@@ -11,8 +11,14 @@ export enum UserRole {
 @Schema({ timestamps: true })
 export class User {
   // id is automatically created by MongoDB as _id
-  @Prop({ required: true, index: true })
-  phone: string;
+  @Prop({ required: false, index: true })
+  phone?: string;
+
+  @Prop({ required: true, unique: true, index: true })
+  email: string;
+
+  @Prop({ required: true })
+  password: string;
 
   @Prop({ required: true, enum: UserRole, default: UserRole.OWNER })
   role: UserRole;

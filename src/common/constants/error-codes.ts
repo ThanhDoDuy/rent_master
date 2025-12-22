@@ -8,6 +8,9 @@ export enum ErrorCode {
   AUTH_OTP_INVALID_OR_EXPIRED = 'AUTH_OTP_INVALID_OR_EXPIRED',
   AUTH_OTP_VERIFY_FAILED = 'AUTH_OTP_VERIFY_FAILED',
   AUTH_TOKEN_INVALID_OR_EXPIRED = 'AUTH_TOKEN_INVALID_OR_EXPIRED',
+  AUTH_EMAIL_ALREADY_EXISTS = 'AUTH_EMAIL_ALREADY_EXISTS',
+  AUTH_INVALID_CREDENTIALS = 'AUTH_INVALID_CREDENTIALS',
+  AUTH_USER_NOT_FOUND = 'AUTH_USER_NOT_FOUND',
 
   // SMS errors (SMS_*)
   SMS_INVALID_PHONE_NUMBER = 'SMS_INVALID_PHONE_NUMBER',
@@ -71,6 +74,9 @@ export const ErrorMessages: Record<ErrorCode, string> = {
   [ErrorCode.AUTH_OTP_INVALID_OR_EXPIRED]: 'Mã OTP không hợp lệ hoặc đã hết hạn',
   [ErrorCode.AUTH_OTP_VERIFY_FAILED]: 'Xác thực OTP thất bại',
   [ErrorCode.AUTH_TOKEN_INVALID_OR_EXPIRED]: 'Token không hợp lệ hoặc đã hết hạn',
+  [ErrorCode.AUTH_EMAIL_ALREADY_EXISTS]: 'Email đã tồn tại trong hệ thống',
+  [ErrorCode.AUTH_INVALID_CREDENTIALS]: 'Email hoặc mật khẩu không đúng',
+  [ErrorCode.AUTH_USER_NOT_FOUND]: 'Người dùng không tồn tại',
 
   [ErrorCode.SMS_INVALID_PHONE_NUMBER]: 'Số điện thoại không hợp lệ',
   [ErrorCode.SMS_INVALID_DATA]: 'Dữ liệu không hợp lệ để gửi SMS',
