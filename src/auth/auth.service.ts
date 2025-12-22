@@ -380,4 +380,51 @@ export class AuthService {
       throw new AppBadRequestException(ErrorCode.GENERIC_INTERNAL_SERVER_ERROR);
     }
   }
+
+  async logout(request: any): Promise<{ message: string }> {
+    try {
+      // Extract token from Authorization header
+      const authHeader = request.headers?.authorization;
+      if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        throw new AppBadRequestException(ErrorCode.AUTH_TOKEN_INVALID_OR_EXPIRED);
+      }
+
+      const token = authHeader.substring(7);
+      
+      // Decode token to get nonce
+      const payload = this.jwtService.decode(token) as any;
+      const nonce = payload?.nonce;
+
+      if (!nonce) {
+        throw new AppBadRequestException(ErrorCode.AUTH_TOKEN_INVALID_OR_EXPIRED);
+      }
+
+      Logger.log('AuthService logout => start', { nonce });
+
+      // Delete session by nonce
+      const result = await this.userSessionModel.deleteOne({ nonce }).exec();
+
+      if (result.deletedCount === 0) {
+        // Session might already be deleted or expired, but we still return success
+        Logger.warn(`Session not found for nonce: ${nonce}`);
+      }
+
+      Logger.log('AuthService logout => success', { nonce });
+
+      return {
+        message: 'Đăng xuất thành công',
+      };
+    } catch (error) {
+      Logger.error('AuthService logout => failed', {
+        error: {
+          message: error.message,
+          stack: error.stack,
+        },
+      });
+      if (error instanceof AppBadRequestException) {
+        throw error;
+      }
+      throw new AppBadRequestException(ErrorCode.GENERIC_INTERNAL_SERVER_ERROR);
+    }
+  }
 }

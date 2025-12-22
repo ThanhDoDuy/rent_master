@@ -7,6 +7,7 @@ import {
   UseGuards,
   HttpCode,
   HttpStatus,
+  Request,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
@@ -69,5 +70,12 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   async adminResetPassword(@Body() dto: AdminResetPasswordDto) {
     return this.authService.adminResetPassword(dto);
+  }
+
+  @Post('logout')
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.OK)
+  async logout(@Request() req: any) {
+    return this.authService.logout(req);
   }
 }

@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { InvoicesController } from './invoices.controller';
 import { InvoicesService } from './invoices.service';
+import { InvoicesCronService } from './invoices-cron.service';
 import { Invoice, InvoiceSchema } from './schemas/invoice.schema';
 import { Contract, ContractSchema } from '../contracts/schemas/contract.schema';
 import { Room, RoomSchema } from '../rooms/schemas/room.schema';
@@ -15,7 +16,7 @@ import { Room, RoomSchema } from '../rooms/schemas/room.schema';
         ]),
     ],
     controllers: [InvoicesController],
-    providers: [InvoicesService],
+    providers: [InvoicesService, InvoicesCronService],
     exports: [InvoicesService],
 })
 export class InvoicesModule { }
