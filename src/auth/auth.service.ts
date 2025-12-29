@@ -40,7 +40,7 @@ export class AuthService {
     private readonly configService: ConfigService,
   ) {}
 
-  async getMeUser(userId: string): Promise<{ id: string; email: string; phone?: string; role: string; accountId: string } | null> {
+  async getMeUser(userId: string): Promise<{ id: string; email: string; phone?: string; name?: string; role: string; accountId: string } | null> {
     const user = await this.userModel.findById(userId).populate('accountId').exec();
     
     if (!user) {
@@ -56,6 +56,7 @@ export class AuthService {
       id: user._id.toString(),
       email: user.email,
       phone: user.phone,
+      name: user.name,
       role: user.role,
       accountId,
     };
@@ -87,7 +88,7 @@ export class AuthService {
 
   async verifyTOTP(
     dto: VerifyTOTPDto,
-  ): Promise<{ sessionToken: string; user: { id: string; role: string; accountId: string } }> {
+  ): Promise<{ sessionToken: string; user: { id: string; name?: string; role: string; accountId: string } }> {
     try {
       Logger.log('AuthService verifyTOTP => start', { phone: dto.phone });
 
@@ -137,6 +138,7 @@ export class AuthService {
         sessionToken,
         user: {
           id: user._id.toString(),
+          name: user.name,
           role: user.role,
           accountId,
         },
@@ -156,7 +158,7 @@ export class AuthService {
     }
   }
 
-  async register(dto: RegisterDto): Promise<{ sessionToken: string; user: { id: string; email: string; role: string; accountId: string } }> {
+  async register(dto: RegisterDto): Promise<{ sessionToken: string; user: { id: string; email: string; name?: string; role: string; accountId: string } }> {
     try {
       Logger.log('AuthService register => start', { email: dto.email });
 
@@ -178,6 +180,7 @@ export class AuthService {
         email: dto.email,
         password: hashedPassword,
         phone: dto.phone,
+        name: dto.name,
         role: UserRole.OWNER,
         accountId: account._id,
       });
@@ -208,6 +211,7 @@ export class AuthService {
         user: {
           id: user._id.toString(),
           email: user.email,
+          name: user.name,
           role: user.role,
           accountId: account._id.toString(),
         },
@@ -227,7 +231,7 @@ export class AuthService {
     }
   }
 
-  async login(dto: LoginDto): Promise<{ sessionToken: string; user: { id: string; email: string; role: string; accountId: string } }> {
+  async login(dto: LoginDto): Promise<{ sessionToken: string; user: { id: string; email: string; name?: string; role: string; accountId: string } }> {
     try {
       Logger.log('AuthService login => start', { email: dto.email });
 
@@ -274,6 +278,7 @@ export class AuthService {
         user: {
           id: user._id.toString(),
           email: user.email,
+          name: user.name,
           role: user.role,
           accountId,
         },

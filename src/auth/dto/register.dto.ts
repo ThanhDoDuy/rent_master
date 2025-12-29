@@ -13,6 +13,10 @@ export class RegisterDto {
 
   @IsOptional()
   @IsString()
-  phone?: string;
+  phone: string;
+
+  @IsOptional()
+  @IsString()
+  name: string;
 }
 
