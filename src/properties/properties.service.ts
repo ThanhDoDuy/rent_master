@@ -6,6 +6,8 @@ import {
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { Property, PropertyDocument } from './schemas/property.schema';
+import { Room, RoomDocument } from '../rooms/schemas/room.schema';
+import { Contract, ContractDocument, ContractStatus } from '../contracts/schemas/contract.schema';
 import { CreatePropertyDto } from './dto/create-property.dto';
 import { UpdatePropertyDto } from './dto/update-property.dto';
 import { AppBadRequestException } from '../common/exceptions/app.exception';
@@ -18,24 +20,111 @@ export class PropertiesService {
   constructor(
     @InjectModel(Property.name)
     private propertyModel: Model<PropertyDocument>,
+    @InjectModel(Room.name)
+    private roomModel: Model<RoomDocument>,
+    @InjectModel(Contract.name)
+    private contractModel: Model<ContractDocument>,
   ) {}
 
-  async findAll(accountId: string): Promise<Property[]> {
+  async findAll(accountId: string): Promise<{
+    properties: any[];
+    totalProperties: number;
+    totalRooms: number;
+    occupancyRate: number;
+  }> {
     this.logger.log(`Finding all properties for accountId: ${accountId}`);
-    const properties = await this.propertyModel
-      .find({ accountId: new Types.ObjectId(accountId) })
-      .sort({ createdAt: -1 })
-      .exec();
+    const accountObjectId = new Types.ObjectId(accountId);
+    
+    // Run initial queries in parallel
+    const [properties, totalRooms, totalOccupiedRooms] = await Promise.all([
+      this.propertyModel
+        .find({ accountId: accountObjectId })
+        .sort({ createdAt: -1 })
+        .exec(),
+      this.roomModel.countDocuments({
+        accountId: accountObjectId,
+      }).exec(),
+      this.contractModel.countDocuments({
+        accountId: accountObjectId,
+        status: ContractStatus.ACTIVE,
+      }).exec(),
+    ]);
 
-    return properties.map((prop) => this.toResponse(prop));
+    // Calculate occupancy rate
+    const occupancyRate = totalRooms > 0 ? totalOccupiedRooms / totalRooms : 0;
+
+    // Get property IDs
+    const propertyIds = properties.map(p => p._id);
+
+    // Run aggregate queries in parallel
+    const [roomCountsByProperty, occupiedRoomCountsByProperty] = await Promise.all([
+      this.roomModel.aggregate([
+        {
+          $match: {
+            accountId: accountObjectId,
+            propertyId: { $in: propertyIds },
+          },
+        },
+        {
+          $group: {
+            _id: '$propertyId',
+            totalRooms: { $sum: 1 },
+          },
+        },
+      ]).exec(),
+      this.contractModel.aggregate([
+        {
+          $match: {
+            accountId: accountObjectId,
+            propertyId: { $in: propertyIds },
+            status: ContractStatus.ACTIVE,
+          },
+        },
+        {
+          $group: {
+            _id: '$propertyId',
+            occupiedRooms: { $sum: 1 },
+          },
+        },
+      ]).exec(),
+    ]);
+
+    // Create maps for quick lookup
+    const roomCountMap = new Map(
+      roomCountsByProperty.map(item => [item._id.toString(), item.totalRooms])
+    );
+    const occupiedRoomCountMap = new Map(
+      occupiedRoomCountsByProperty.map(item => [item._id.toString(), item.occupiedRooms])
+    );
+
+    return {
+      properties: properties.map((prop) => {
+        const propertyId = prop._id.toString();
+        const totalRoomsForProperty = roomCountMap.get(propertyId) || 0;
+        const occupiedRoomsForProperty = occupiedRoomCountMap.get(propertyId) || 0;
+        const isFull = totalRoomsForProperty > 0 && occupiedRoomsForProperty === totalRoomsForProperty;
+        
+        return this.toResponse(prop, {
+          totalRooms: totalRoomsForProperty,
+          occupiedRooms: occupiedRoomsForProperty,
+          status: isFull ? 'full' : 'vacant',
+        });
+      }),
+      totalProperties: properties.length,
+      totalRooms,
+      occupancyRate: Math.round(occupancyRate * 10000) / 100, // Round to 2 decimal places as percentage
+    };
   }
 
-  async findOne(id: string, accountId: string): Promise<Property> {
+  async findOne(id: string, accountId: string): Promise<any> {
     this.logger.log(`Finding property ${id} for accountId: ${accountId}`);
+    const accountObjectId = new Types.ObjectId(accountId);
+    const propertyObjectId = new Types.ObjectId(id);
+    
     const property = await this.propertyModel
       .findOne({
-        _id: new Types.ObjectId(id),
-        accountId: new Types.ObjectId(accountId),
+        _id: propertyObjectId,
+        accountId: accountObjectId,
       })
       .exec();
 
@@ -43,7 +132,26 @@ export class PropertiesService {
       throw new NotFoundException('Property not found');
     }
 
-    return this.toResponse(property);
+    // Get room counts for this property
+    const totalRooms = await this.roomModel.countDocuments({
+      accountId: accountObjectId,
+      propertyId: propertyObjectId,
+    }).exec();
+
+    // Get occupied room count (rooms with active contracts)
+    const occupiedRooms = await this.contractModel.countDocuments({
+      accountId: accountObjectId,
+      propertyId: propertyObjectId,
+      status: ContractStatus.ACTIVE,
+    }).exec();
+
+    const isFull = totalRooms > 0 && occupiedRooms === totalRooms;
+
+    return this.toResponse(property, {
+      totalRooms,
+      occupiedRooms,
+      status: isFull ? 'full' : 'vacant',
+    });
   }
 
   async create(
@@ -134,12 +242,19 @@ export class PropertiesService {
     return { id };
   }
 
-  private toResponse(property: PropertyDocument): any {
+  private toResponse(property: PropertyDocument, roomInfo?: {
+    totalRooms: number;
+    occupiedRooms: number;
+    status: 'full' | 'vacant';
+  }): any {
     return {
       id: property._id.toString(),
       name: property.name,
       address: property.address,
       note: property.note,
+      totalRooms: roomInfo?.totalRooms || 0,
+      occupiedRooms: roomInfo?.occupiedRooms || 0,
+      status: roomInfo?.status || 'vacant',
       createdAt: (property as any).createdAt,
     };
   }

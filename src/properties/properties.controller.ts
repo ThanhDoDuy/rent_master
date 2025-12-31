@@ -23,8 +23,7 @@ export class PropertiesController {
 
   @Get()
   async findAll(@AccountId() accountId: string) {
-    const properties = await this.propertiesService.findAll(accountId);
-    return { properties };
+    return this.propertiesService.findAll(accountId);
   }
 
   @Get(':id')
