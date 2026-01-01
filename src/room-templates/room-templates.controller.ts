@@ -6,6 +6,7 @@ import {
     Delete,
     Body,
     Param,
+    Query,
     UseGuards,
     HttpCode,
     HttpStatus,
@@ -22,8 +23,11 @@ export class RoomTemplatesController {
     constructor(private readonly roomTemplatesService: RoomTemplatesService) { }
 
     @Get()
-    async findAll(@AccountId() accountId: string) {
-        const templates = await this.roomTemplatesService.findAll(accountId);
+    async findAll(
+        @Query('propertyId') propertyId: string,
+        @AccountId() accountId: string
+    ) {
+        const templates = await this.roomTemplatesService.findAll(accountId, propertyId);
         return { templates };
     }
 

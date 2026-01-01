@@ -9,6 +9,9 @@ export class RoomTemplate {
   @Prop({ type: Types.ObjectId, required: true, ref: 'Account' })
   accountId: Types.ObjectId;
 
+  @Prop({ type: Types.ObjectId, required: true, ref: 'Property' })
+  propertyId: Types.ObjectId;
+
   @Prop({ required: true })
   name: string;
 
@@ -31,5 +34,7 @@ export const RoomTemplateSchema = SchemaFactory.createForClass(RoomTemplate);
 
 // Indexes
 RoomTemplateSchema.index({ accountId: 1 });
-RoomTemplateSchema.index({ accountId: 1, name: 1 });
+RoomTemplateSchema.index({ propertyId: 1 });
+RoomTemplateSchema.index({ accountId: 1, propertyId: 1 });
+RoomTemplateSchema.index({ accountId: 1, propertyId: 1, name: 1 });
 

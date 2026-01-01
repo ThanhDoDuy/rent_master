@@ -20,10 +20,14 @@ export class RoomTemplatesService {
         private roomTemplateModel: Model<RoomTemplateDocument>,
     ) { }
 
-    async findAll(accountId: string): Promise<any[]> {
-        this.logger.log(`Finding all room templates for accountId: ${accountId}`);
+    async findAll(accountId: string, propertyId?: string): Promise<any[]> {
+        this.logger.log(`Finding all room templates for accountId: ${accountId}, propertyId: ${propertyId || 'all'}`);
+        const query: any = { accountId: new Types.ObjectId(accountId) };
+        if (propertyId) {
+            query.propertyId = new Types.ObjectId(propertyId);
+        }
         const templates = await this.roomTemplateModel
-            .find({ accountId: new Types.ObjectId(accountId) })
+            .find(query)
             .sort({ createdAt: -1 })
             .exec();
         return templates.map((template: RoomTemplateDocument) => this.toResponse(template, false));
@@ -48,11 +52,13 @@ export class RoomTemplatesService {
         createRoomTemplateDto: CreateRoomTemplateDto,
         accountId: string,
     ): Promise<any> {
-        this.logger.log(`Creating room template for accountId: ${accountId}`);
+        this.logger.log(`Creating room template for accountId: ${accountId}, propertyId: ${createRoomTemplateDto.propertyId}`);
         const cleanedData = this.cleanServicesData(createRoomTemplateDto);
+        const { propertyId, ...restData } = cleanedData;
         const template = await this.roomTemplateModel.create({
-            ...cleanedData,
+            ...restData,
             accountId: new Types.ObjectId(accountId),
+            propertyId: new Types.ObjectId(propertyId),
         });
 
         return this.toResponse(template, false);

@@ -1,4 +1,4 @@
-import { IsString, IsNotEmpty } from 'class-validator';
+import { IsString, IsNotEmpty, IsNumber, IsOptional } from 'class-validator';
 
 export class CreateRoomDto {
     @IsString()
@@ -8,4 +8,8 @@ export class CreateRoomDto {
     @IsString()
     @IsNotEmpty()
     templateId: string;
+
+    @IsNumber()
+    @IsOptional()
+    deposit?: number;
 }

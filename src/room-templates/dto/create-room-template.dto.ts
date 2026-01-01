@@ -30,6 +30,10 @@ class ServiceDto {
 export class CreateRoomTemplateDto {
   @IsString()
   @IsNotEmpty()
+  propertyId: string;
+
+  @IsString()
+  @IsNotEmpty()
   name: string;
 
   @IsNumber()

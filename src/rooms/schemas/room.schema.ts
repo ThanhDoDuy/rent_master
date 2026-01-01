@@ -42,6 +42,9 @@ export class Room {
     [key: string]: number; // key = service key (e.g., "ELECTRICITY", "WATER"), value = lastReading
   };
 
+  @Prop({ type: Number, required: false })
+  deposit?: number; // Tiền đặt cọc
+
   @Prop({ required: false })
   note?: string;
 

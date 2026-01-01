@@ -77,6 +77,7 @@ export class RoomsService {
             name: template.name,
             baseRent: template.baseRent,
             currency: template.currency,
+            area: template.area, // Include area from template
             services: this.cleanServices(template.services || []),
         };
 
@@ -87,6 +88,7 @@ export class RoomsService {
             name: createRoomDto.name,
             status: RoomStatus.VACANT,
             templateSnapshot,
+            deposit: createRoomDto.deposit,
         });
 
         return this.toListResponse(room);
@@ -188,6 +190,7 @@ export class RoomsService {
             },
             note: room.note,
             meterReadings: room.meterReadings,
+            deposit: room.deposit,
         };
     }
 
