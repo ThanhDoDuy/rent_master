@@ -18,6 +18,9 @@ export class RoomTemplate {
   @Prop({ required: true })
   currency: string;
 
+  @Prop({ type: Number, required: false })
+  area?: number; // Area in m²
+
   @Prop({ type: Object, required: false })
   services?: any; // JSONB equivalent - stored as object in MongoDB
 

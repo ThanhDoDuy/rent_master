@@ -163,6 +163,10 @@ export class RoomTemplatesService {
             currency: template.currency,
         };
 
+        if (template.area != null) {
+            response.area = template.area;
+        }
+
         if (includeServices && template.services) {
             response.services = template.services.map((service: any) => {
                 const cleanedService: any = {

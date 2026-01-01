@@ -166,7 +166,13 @@ export class RoomsService {
         return {
             id: room._id.toString(),
             name: room.name,
+            propertyId: room.propertyId.toString(),
             status: room.status,
+            templateSnapshot: {
+                ...room.templateSnapshot,
+                services: this.cleanServices(room.templateSnapshot?.services || []),
+            },
+            note: room.note,
         };
     }
 
@@ -174,11 +180,14 @@ export class RoomsService {
         return {
             id: room._id.toString(),
             name: room.name,
+            propertyId: room.propertyId.toString(),
             status: room.status,
             templateSnapshot: {
                 ...room.templateSnapshot,
                 services: this.cleanServices(room.templateSnapshot?.services || []),
             },
+            note: room.note,
+            meterReadings: room.meterReadings,
         };
     }
 

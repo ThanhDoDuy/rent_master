@@ -36,14 +36,18 @@ export class UpdateRoomTemplateDto {
     @IsOptional()
     baseRent?: number;
 
-    @IsString()
-    @IsOptional()
-    currency?: string;
+  @IsString()
+  @IsOptional()
+  currency?: string;
 
-    @IsArray()
-    @IsOptional()
-    @ValidateNested({ each: true })
-    @Type(() => ServiceDto)
-    services?: ServiceDto[];
+  @IsNumber()
+  @IsOptional()
+  area?: number; // Area in m²
+
+  @IsArray()
+  @IsOptional()
+  @ValidateNested({ each: true })
+  @Type(() => ServiceDto)
+  services?: ServiceDto[];
 }
 

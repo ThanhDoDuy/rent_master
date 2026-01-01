@@ -40,6 +40,10 @@ export class CreateRoomTemplateDto {
   @IsNotEmpty()
   currency: string;
 
+  @IsNumber()
+  @IsOptional()
+  area?: number; // Area in m²
+
   @IsArray()
   @IsOptional()
   @ValidateNested({ each: true })
