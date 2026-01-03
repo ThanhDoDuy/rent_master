@@ -59,6 +59,22 @@ export class RoomsService {
     ): Promise<any> {
         this.logger.log(`Creating room for propertyId: ${propertyId}, accountId: ${accountId}`);
 
+        // Check if room name already exists in this property
+        const existingRoom = await this.roomModel
+            .findOne({
+                propertyId: new Types.ObjectId(propertyId),
+                accountId: new Types.ObjectId(accountId),
+                name: createRoomDto.name.trim(),
+            })
+            .exec();
+
+        if (existingRoom) {
+            throw new AppBadRequestException(
+                ErrorCode.ROOM_NAME_DUPLICATE,
+                `Tên phòng "${createRoomDto.name}" đã tồn tại trong dãy trọ này. Vui lòng xóa phòng cũ trước khi tạo mới.`
+            );
+        }
+
         // Get template to create snapshot
         const template = await this.roomTemplateModel
             .findOne({
@@ -89,6 +105,7 @@ export class RoomsService {
             status: RoomStatus.VACANT,
             templateSnapshot,
             deposit: createRoomDto.deposit,
+            note: createRoomDto.note,
         });
 
         return this.toListResponse(room);
@@ -101,13 +118,49 @@ export class RoomsService {
     ): Promise<any> {
         this.logger.log(`Updating room ${roomId} for accountId: ${accountId}`);
 
-        // Only allow updating name and note, not status or templateSnapshot
-        const updateData: any = {};
-        if (updateRoomDto.name !== undefined) {
-            updateData.name = updateRoomDto.name;
+        // Get existing room to preserve templateSnapshot structure
+        const existingRoom = await this.roomModel
+            .findOne({
+                _id: new Types.ObjectId(roomId),
+                accountId: new Types.ObjectId(accountId),
+            })
+            .exec();
+
+        if (!existingRoom) {
+            throw new NotFoundException('Room not found');
         }
+
+        // Build update data
+        const updateData: any = {};
+        
+        // Update note if provided
         if (updateRoomDto.note !== undefined) {
             updateData.note = updateRoomDto.note;
+        }
+
+        // Update templateSnapshot if templateId is provided
+        if (updateRoomDto.templateId) {
+            // Get the new template
+            const template = await this.roomTemplateModel
+                .findOne({
+                    _id: new Types.ObjectId(updateRoomDto.templateId),
+                    accountId: new Types.ObjectId(accountId),
+                })
+                .exec();
+
+            if (!template) {
+                throw new NotFoundException('Room template not found');
+            }
+
+            // Create new template snapshot from the selected template
+            updateData.templateSnapshot = {
+                templateId: template._id.toString(),
+                name: template.name,
+                baseRent: template.baseRent,
+                currency: template.currency,
+                area: template.area,
+                services: this.cleanServices(template.services || []),
+            };
         }
 
         const room = await this.roomModel
@@ -147,7 +200,7 @@ export class RoomsService {
         const db = this.roomModel.db;
         const contractsCollection = db.collection('contracts');
         const contractCount = await contractsCollection.countDocuments({
-            roomId: roomId,
+            roomId: new Types.ObjectId(roomId),
             accountId: new Types.ObjectId(accountId),
         });
 

@@ -12,4 +12,8 @@ export class CreateRoomDto {
     @IsNumber()
     @IsOptional()
     deposit?: number;
+
+    @IsString()
+    @IsOptional()
+    note?: string;
 }

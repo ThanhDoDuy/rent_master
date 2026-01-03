@@ -39,6 +39,7 @@ export enum ErrorCode {
 
   // Room errors (ROOM_*)
   ROOM_IN_USE = 'ROOM_IN_USE',
+  ROOM_NAME_DUPLICATE = 'ROOM_NAME_DUPLICATE',
 
   // Tenant errors (TENANT_*)
   TENANT_HAS_CONTRACT_HISTORY = 'TENANT_HAS_CONTRACT_HISTORY',
@@ -99,6 +100,7 @@ export const ErrorMessages: Record<ErrorCode, string> = {
   [ErrorCode.TEMPLATE_IN_USE]: 'Template đang được sử dụng (có phòng hoặc hợp đồng)',
 
   [ErrorCode.ROOM_IN_USE]: 'Phòng đang được sử dụng (có hợp đồng)',
+  [ErrorCode.ROOM_NAME_DUPLICATE]: 'Tên phòng đã tồn tại trong dãy trọ này. Vui lòng xóa phòng cũ trước khi tạo mới.',
 
   [ErrorCode.TENANT_HAS_CONTRACT_HISTORY]: 'Không thể xóa tenant đã có lịch sử hợp đồng',
   [ErrorCode.TENANT_PHONE_DUPLICATE]: 'Số điện thoại đã tồn tại trong hệ thống',

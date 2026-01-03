@@ -34,6 +34,7 @@ export class Room {
     name: string;
     baseRent: number;
     currency: string;
+    area?: number;
     services?: any[];
   };
 
