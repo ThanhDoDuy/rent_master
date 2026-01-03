@@ -8,8 +8,10 @@ import { Model, Types } from 'mongoose';
 import { Tenant, TenantDocument } from './schemas/tenant.schema';
 import { CreateTenantDto } from './dto/create-tenant.dto';
 import { UpdateTenantDto } from './dto/update-tenant.dto';
-import { AppConflictException } from '../common/exceptions/app.exception';
+import { AppConflictException, AppBadRequestException } from '../common/exceptions/app.exception';
 import { ErrorCode } from '../common/constants/error-codes';
+import { ContractTenant, ContractTenantDocument } from '../contracts/schemas/contract-tenant.schema';
+import { Contract, ContractDocument, ContractStatus } from '../contracts/schemas/contract.schema';
 
 @Injectable()
 export class TenantsService {
@@ -18,16 +20,69 @@ export class TenantsService {
     constructor(
         @InjectModel(Tenant.name)
         private tenantModel: Model<TenantDocument>,
+        @InjectModel(ContractTenant.name)
+        private contractTenantModel: Model<ContractTenantDocument>,
+        @InjectModel(Contract.name)
+        private contractModel: Model<ContractDocument>,
     ) { }
 
-    async findAll(accountId: string): Promise<any[]> {
+    async findAll(accountId: string, excludeRoomId?: string): Promise<any[]> {
         this.logger.log(`Finding all tenants for accountId: ${accountId}`);
         const tenants = await this.tenantModel
             .find({ accountId: new Types.ObjectId(accountId) })
             .sort({ createdAt: -1 })
             .exec();
 
-        return tenants.map((tenant: TenantDocument) => this.toListResponse(tenant));
+        // Check which tenants have active contracts or are in other rooms
+        const tenantIds = tenants.map(t => t._id);
+        const contractTenants = await this.contractTenantModel
+            .find({ tenantId: { $in: tenantIds } })
+            .exec();
+
+        // Get contract IDs from contractTenants
+        const contractIds = contractTenants.map(ct => ct.contractId).filter(Boolean);
+        
+        if (contractIds.length === 0) {
+            // No contracts, all tenants are available
+            return tenants.map((tenant: TenantDocument) => this.toListResponse(tenant, false));
+        }
+
+        // Get all active/draft contracts
+        const activeContracts = await this.contractModel
+            .find({
+                _id: { $in: contractIds },
+                status: { $in: [ContractStatus.ACTIVE, ContractStatus.DRAFT] },
+            })
+            .exec();
+
+        // Create a map of contractId -> contract for quick lookup
+        const contractMap = new Map<string, any>();
+        activeContracts.forEach(contract => {
+            contractMap.set(contract._id.toString(), contract);
+        });
+
+        // Map tenant to room (if tenant has active contract in a different room)
+        const tenantRoomMap = new Map<string, string>(); // tenantId -> roomId
+
+        for (const ct of contractTenants) {
+            const contractId = ct.contractId.toString();
+            const contract = contractMap.get(contractId);
+            
+            if (contract) {
+                const tenantId = ct.tenantId.toString();
+                const roomId = contract.roomId?.toString();
+                // If excludeRoomId is provided, only mark as unavailable if in a different room
+                if (roomId && (!excludeRoomId || roomId !== excludeRoomId)) {
+                    tenantRoomMap.set(tenantId, roomId);
+                }
+            }
+        }
+
+        return tenants.map((tenant: TenantDocument) => {
+            const tenantId = tenant._id.toString();
+            const hasActiveContract = tenantRoomMap.has(tenantId);
+            return this.toListResponse(tenant, hasActiveContract);
+        });
     }
 
     async findOne(tenantId: string, accountId: string): Promise<any> {
@@ -114,6 +169,59 @@ export class TenantsService {
         
         const accountObjectId = new Types.ObjectId(accountId);
         
+        // Validate documentType and documentNumber logic
+        if (createTenantDto.documentType && !createTenantDto.documentNumber) {
+            throw new AppBadRequestException(
+                ErrorCode.VALIDATION_INVALID_INPUT,
+                'Nếu có loại giấy tờ thì phải có số giấy tờ'
+            );
+        }
+        
+        if (!createTenantDto.documentType && createTenantDto.documentNumber) {
+            throw new AppBadRequestException(
+                ErrorCode.VALIDATION_INVALID_INPUT,
+                'Nếu có số giấy tờ thì phải có loại giấy tờ'
+            );
+        }
+        
+        // Validate documentType enum
+        if (createTenantDto.documentType && 
+            !['CCCD', 'PASSPORT'].includes(createTenantDto.documentType)) {
+            throw new AppBadRequestException(
+                ErrorCode.VALIDATION_INVALID_INPUT,
+                'Loại giấy tờ phải là CCCD hoặc PASSPORT'
+            );
+        }
+        
+        // Validate documentNumber format based on documentType
+        if (createTenantDto.documentType && createTenantDto.documentNumber) {
+            if (createTenantDto.documentType === 'CCCD') {
+                // CCCD: 12 digits
+                if (!/^\d{12}$/.test(createTenantDto.documentNumber)) {
+                    throw new AppBadRequestException(
+                        ErrorCode.VALIDATION_INVALID_INPUT,
+                        'Số CCCD phải có đúng 12 chữ số'
+                    );
+                }
+            } else if (createTenantDto.documentType === 'PASSPORT') {
+                // Passport: 8-9 alphanumeric characters
+                if (!/^[A-Z0-9]{8,9}$/.test(createTenantDto.documentNumber.toUpperCase())) {
+                    throw new AppBadRequestException(
+                        ErrorCode.VALIDATION_INVALID_INPUT,
+                        'Số Passport không hợp lệ (8-9 ký tự, chữ và số)'
+                    );
+                }
+            }
+        }
+        
+        // Validate phone format
+        if (!/^0[3-9]\d{8,9}$/.test(createTenantDto.phone)) {
+            throw new AppBadRequestException(
+                ErrorCode.VALIDATION_INVALID_INPUT,
+                'Số điện thoại không hợp lệ. Vui lòng nhập số điện thoại Việt Nam (10-11 số, bắt đầu bằng 0)'
+            );
+        }
+        
         // Check for duplicate phone before creating
         const existingTenantByPhone = await this.tenantModel
             .findOne({
@@ -132,7 +240,7 @@ export class TenantsService {
                 .findOne({
                     accountId: accountObjectId,
                     documentType: createTenantDto.documentType,
-                    documentNumber: createTenantDto.documentNumber,
+                    documentNumber: createTenantDto.documentNumber.toUpperCase(),
                 })
                 .exec();
             
@@ -142,10 +250,18 @@ export class TenantsService {
         }
         
         try {
-            const tenant = await this.tenantModel.create({
+            // Normalize documentNumber to uppercase for Passport
+            const normalizedData = {
                 ...createTenantDto,
+                documentNumber: createTenantDto.documentNumber 
+                    ? (createTenantDto.documentType === 'PASSPORT' 
+                        ? createTenantDto.documentNumber.toUpperCase() 
+                        : createTenantDto.documentNumber)
+                    : undefined,
                 accountId: accountObjectId,
-            });
+            };
+            
+            const tenant = await this.tenantModel.create(normalizedData);
 
             return this.toListResponse(tenant);
         } catch (error: any) {
@@ -312,11 +428,12 @@ export class TenantsService {
         };
     }
 
-    private toListResponse(tenant: TenantDocument): any {
+    private toListResponse(tenant: TenantDocument, hasActiveContract: boolean = false): any {
         return {
             id: tenant._id.toString(),
             fullName: tenant.fullName,
             phone: tenant.phone,
+            hasActiveContract, // Indicates if tenant has an active contract in another room
         };
     }
 

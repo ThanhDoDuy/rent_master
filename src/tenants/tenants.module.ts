@@ -3,11 +3,15 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { TenantsController } from './tenants.controller';
 import { TenantsService } from './tenants.service';
 import { Tenant, TenantSchema } from './schemas/tenant.schema';
+import { ContractTenant, ContractTenantSchema } from '../contracts/schemas/contract-tenant.schema';
+import { Contract, ContractSchema } from '../contracts/schemas/contract.schema';
 
 @Module({
     imports: [
         MongooseModule.forFeature([
             { name: Tenant.name, schema: TenantSchema },
+            { name: ContractTenant.name, schema: ContractTenantSchema },
+            { name: Contract.name, schema: ContractSchema },
         ]),
     ],
     controllers: [TenantsController],

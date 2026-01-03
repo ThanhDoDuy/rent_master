@@ -29,7 +29,7 @@ export class ContractsService {
     private roomModel: Model<RoomDocument>,
     @InjectModel(Tenant.name)
     private tenantModel: Model<TenantDocument>,
-  ) {}
+  ) { }
 
   async create(
     createContractDto: CreateContractDto,
@@ -49,17 +49,21 @@ export class ContractsService {
       throw new NotFoundException('Room not found');
     }
 
-    // Check no active contract for this room
-    const activeContract = await this.contractModel
+    // Check no existing contract (DRAFT or ACTIVE) for this room
+    const existingContract = await this.contractModel
       .findOne({
         roomId: new Types.ObjectId(createContractDto.roomId),
         accountId: new Types.ObjectId(accountId),
-        status: ContractStatus.ACTIVE,
+        status: { $in: [ContractStatus.DRAFT, ContractStatus.ACTIVE] },
       })
       .exec();
 
-    if (activeContract) {
-      throw new AppBadRequestException(ErrorCode.CONTRACT_ROOM_ALREADY_ACTIVE);
+    if (existingContract) {
+      if (existingContract.status === ContractStatus.ACTIVE) {
+        throw new AppBadRequestException(ErrorCode.CONTRACT_ROOM_ALREADY_ACTIVE);
+      } else {
+        throw new AppBadRequestException(ErrorCode.CONTRACT_ROOM_HAS_CONTRACT);
+      }
     }
 
     // Validate dates
@@ -79,6 +83,12 @@ export class ContractsService {
       startDate,
       endDate,
     });
+
+    // Update room status to OCCUPIED when contract is created
+    await this.roomModel.updateOne(
+      { _id: new Types.ObjectId(createContractDto.roomId) },
+      { $set: { status: RoomStatus.OCCUPIED } },
+    );
 
     return {
       id: contract._id.toString(),
@@ -126,10 +136,24 @@ export class ContractsService {
       .exec();
 
     if (existingLink) {
+      // Provide specific error message based on existing role and new role
+      if (existingLink.role === TenantRole.PRIMARY && addTenantDto.role === TenantRole.OCCUPANT) {
+        throw new AppBadRequestException(
+          ErrorCode.CONTRACT_TENANT_ALREADY_LINKED,
+          'Người thuê chính không thể được thêm lại như người thuê phụ'
+        );
+      }
+      if (existingLink.role === TenantRole.OCCUPANT && addTenantDto.role === TenantRole.PRIMARY) {
+        throw new AppBadRequestException(
+          ErrorCode.CONTRACT_TENANT_ALREADY_LINKED,
+          'Người thuê phụ không thể được thêm lại như người thuê chính'
+        );
+      }
+      // Same role or other cases
       throw new AppBadRequestException(ErrorCode.CONTRACT_TENANT_ALREADY_LINKED);
     }
 
-    // If PRIMARY, check no other PRIMARY exists
+    // If PRIMARY, check no other PRIMARY exists (different tenant)
     if (addTenantDto.role === TenantRole.PRIMARY) {
       const existingPrimary = await this.contractTenantModel
         .findOne({
@@ -306,7 +330,7 @@ export class ContractsService {
       // Merge with existing meterReadings if any
       const existingMeterReadings = room.meterReadings || {};
       const meterReadings: { [key: string]: number } = { ...existingMeterReadings };
-      
+
       for (const reading of activateDto.initialMeterReadings) {
         meterReadings[reading.key] = reading.reading;
       }
@@ -411,6 +435,53 @@ export class ContractsService {
     return { status: ContractStatus.TERMINATED };
   }
 
+  async findByRoomId(roomId: string, accountId: string): Promise<any> {
+    this.logger.log(`Finding contract for room ${roomId}`);
+
+    // Get active or draft contract for this room
+    const contract = await this.contractModel
+      .findOne({
+        roomId: new Types.ObjectId(roomId),
+        accountId: new Types.ObjectId(accountId),
+        status: { $in: [ContractStatus.DRAFT, ContractStatus.ACTIVE] },
+      })
+      .sort({ createdAt: -1 }) // Get the most recent one
+      .exec();
+
+    if (!contract) {
+      return null;
+    }
+
+    // Get tenants with populated tenant data
+    const contractTenants = await this.contractTenantModel
+      .find({ contractId: contract._id })
+      .populate('tenantId')
+      .exec();
+
+    const tenants = contractTenants.map((ct) => {
+      const tenant = ct.tenantId as any;
+      return {
+        tenantId: tenant._id.toString(),
+        name: tenant.fullName,
+        phone: tenant.phone,
+        role: ct.role,
+      };
+    });
+
+    // Get primary tenant
+    const primaryTenant = tenants.find((t) => t.role === TenantRole.PRIMARY);
+
+    return {
+      id: contract._id.toString(),
+      roomId: contract.roomId.toString(),
+      status: contract.status,
+      startDate: contract.startDate,
+      endDate: contract.endDate,
+      primaryTenant: primaryTenant || null,
+      tenants,
+    };
+  }
+
   async findOne(contractId: string, accountId: string): Promise<any> {
     this.logger.log(`Finding contract ${contractId}`);
 
@@ -420,7 +491,7 @@ export class ContractsService {
         _id: new Types.ObjectId(contractId),
         accountId: new Types.ObjectId(accountId),
       })
-      
+
       .exec();
 
     if (!contract) {
@@ -443,13 +514,17 @@ export class ContractsService {
       };
     });
 
+    // Get primary tenant
+    const primaryTenant = tenants.find((t) => t.role === TenantRole.PRIMARY);
+
     return {
       id: contract._id.toString(),
       roomId: contract.roomId.toString(),
       status: contract.status,
-      tenants,
       startDate: contract.startDate,
       endDate: contract.endDate,
+      primaryTenant: primaryTenant || null,
+      tenants,
       terminatedAt: contract.terminatedAt || null,
       reason: contract.reason || null,
     };

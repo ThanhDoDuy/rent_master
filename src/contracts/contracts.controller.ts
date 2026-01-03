@@ -31,6 +31,11 @@ export class ContractsController {
     return this.contractsService.create(createContractDto, accountId);
   }
 
+  @Get('room/:roomId')
+  async findByRoomId(@Param('roomId') roomId: string, @AccountId() accountId: string) {
+    return this.contractsService.findByRoomId(roomId, accountId);
+  }
+
   @Get(':id')
   async findOne(@Param('id') id: string, @AccountId() accountId: string) {
     return this.contractsService.findOne(id, accountId);

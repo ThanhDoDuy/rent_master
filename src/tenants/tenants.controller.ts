@@ -6,6 +6,7 @@ import {
     Delete,
     Body,
     Param,
+    Query,
     UseGuards,
     HttpCode,
     HttpStatus,
@@ -23,8 +24,11 @@ export class TenantsController {
     constructor(private readonly tenantsService: TenantsService) { }
 
     @Get()
-    async findAll(@AccountId() accountId: string) {
-        const tenants = await this.tenantsService.findAll(accountId);
+    async findAll(
+        @AccountId() accountId: string,
+        @Query('excludeRoomId') excludeRoomId?: string,
+    ) {
+        const tenants = await this.tenantsService.findAll(accountId, excludeRoomId);
         return { tenants };
     }
 

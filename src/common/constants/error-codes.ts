@@ -48,6 +48,7 @@ export enum ErrorCode {
 
   // Contract errors (CONTRACT_*)
   CONTRACT_ROOM_ALREADY_ACTIVE = 'CONTRACT_ROOM_ALREADY_ACTIVE',
+  CONTRACT_ROOM_HAS_CONTRACT = 'CONTRACT_ROOM_HAS_CONTRACT',
   CONTRACT_INVALID_DATES = 'CONTRACT_INVALID_DATES',
   CONTRACT_TENANT_ALREADY_LINKED = 'CONTRACT_TENANT_ALREADY_LINKED',
   CONTRACT_PRIMARY_EXISTS = 'CONTRACT_PRIMARY_EXISTS',
@@ -107,6 +108,7 @@ export const ErrorMessages: Record<ErrorCode, string> = {
   [ErrorCode.TENANT_DOCUMENT_DUPLICATE]: 'Số giấy tờ đã tồn tại trong hệ thống',
 
   [ErrorCode.CONTRACT_ROOM_ALREADY_ACTIVE]: 'Phòng đã có hợp đồng đang hoạt động',
+  [ErrorCode.CONTRACT_ROOM_HAS_CONTRACT]: 'Phòng đã có hợp đồng. Vui lòng hoàn tất hoặc hủy hợp đồng hiện tại trước khi tạo mới',
   [ErrorCode.CONTRACT_INVALID_DATES]: 'Ngày bắt đầu phải trước ngày kết thúc',
   [ErrorCode.CONTRACT_TENANT_ALREADY_LINKED]: 'Tenant đã được thêm vào hợp đồng',
   [ErrorCode.CONTRACT_PRIMARY_EXISTS]: 'Hợp đồng đã có PRIMARY tenant',
