@@ -49,6 +49,9 @@ export class Room {
   @Prop({ required: false })
   note?: string;
 
+  @Prop({ type: [Types.ObjectId], ref: 'Tenant', default: [], required: false })
+  occupants?: Types.ObjectId[]; // Người trọ chung (không liên quan đến contract)
+
   // createdAt is automatically added by timestamps: true
 }
 

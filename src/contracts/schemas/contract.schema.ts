@@ -51,6 +51,13 @@ export class Contract {
     services?: any[];
   };
 
+  @Prop({ type: Object, required: false })
+  primaryTenant?: {
+    tenantId: Types.ObjectId; // Reference to Tenant
+    name: string;
+    phone: string;
+  };
+
   // createdAt is automatically added by timestamps: true
 }
 

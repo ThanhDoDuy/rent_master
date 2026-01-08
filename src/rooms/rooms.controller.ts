@@ -64,5 +64,25 @@ export class RoomsController {
     ) {
         return this.roomsService.remove(id, accountId);
     }
+
+    @Post('rooms/:id/occupants')
+    @HttpCode(HttpStatus.OK)
+    async addOccupant(
+        @Param('id') roomId: string,
+        @Body() body: { tenantId: string },
+        @AccountId() accountId: string,
+    ) {
+        return this.roomsService.addOccupant(roomId, body.tenantId, accountId);
+    }
+
+    @Delete('rooms/:id/occupants/:tenantId')
+    @HttpCode(HttpStatus.OK)
+    async removeOccupant(
+        @Param('id') roomId: string,
+        @Param('tenantId') tenantId: string,
+        @AccountId() accountId: string,
+    ) {
+        return this.roomsService.removeOccupant(roomId, tenantId, accountId);
+    }
 }
 

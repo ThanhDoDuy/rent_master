@@ -9,6 +9,7 @@ import { Room, RoomDocument, RoomStatus } from './schemas/room.schema';
 import { CreateRoomDto } from './dto/create-room.dto';
 import { UpdateRoomDto } from './dto/update-room.dto';
 import { RoomTemplate, RoomTemplateDocument } from '../room-templates/schemas/room-template.schema';
+import { Tenant, TenantDocument } from '../tenants/schemas/tenant.schema';
 import { AppBadRequestException } from '../common/exceptions/app.exception';
 import { ErrorCode } from '../common/constants/error-codes';
 
@@ -21,6 +22,8 @@ export class RoomsService {
         private roomModel: Model<RoomDocument>,
         @InjectModel(RoomTemplate.name)
         private roomTemplateModel: Model<RoomTemplateDocument>,
+        @InjectModel(Tenant.name)
+        private tenantModel: Model<TenantDocument>,
     ) { }
 
     async findAll(propertyId: string, accountId: string): Promise<any[]> {
@@ -43,6 +46,7 @@ export class RoomsService {
                 _id: new Types.ObjectId(roomId),
                 accountId: new Types.ObjectId(accountId),
             })
+            .populate('occupants')
             .exec();
 
         if (!room) {
@@ -217,6 +221,92 @@ export class RoomsService {
         return { id: roomId };
     }
 
+    async addOccupant(roomId: string, tenantId: string, accountId: string): Promise<any> {
+        this.logger.log(`Adding occupant ${tenantId} to room ${roomId}`);
+        
+        const room = await this.roomModel
+            .findOne({
+                _id: new Types.ObjectId(roomId),
+                accountId: new Types.ObjectId(accountId),
+            })
+            .exec();
+
+        if (!room) {
+            throw new NotFoundException('Room not found');
+        }
+
+        // Check tenant exists and belongs to account
+        const tenant = await this.tenantModel
+            .findOne({
+                _id: new Types.ObjectId(tenantId),
+                accountId: new Types.ObjectId(accountId),
+            })
+            .exec();
+
+        if (!tenant) {
+            throw new NotFoundException('Tenant not found');
+        }
+
+        // Check if tenant already has a room
+        if (tenant.roomId && tenant.roomId.toString() !== roomId) {
+            throw new AppBadRequestException(ErrorCode.TENANT_ALREADY_HAS_ROOM);
+        }
+
+        const tenantObjectId = new Types.ObjectId(tenantId);
+        
+        // Check if tenant is already an occupant
+        if (room.occupants && room.occupants.some(id => id.toString() === tenantId)) {
+            throw new AppBadRequestException(ErrorCode.ROOM_OCCUPANT_ALREADY_EXISTS);
+        }
+
+        // Add tenant to occupants array
+        await this.roomModel.updateOne(
+            { _id: new Types.ObjectId(roomId) },
+            { $addToSet: { occupants: tenantObjectId } }
+        );
+
+        // Update tenant's roomId
+        await this.tenantModel.updateOne(
+            { _id: tenantObjectId },
+            { $set: { roomId: new Types.ObjectId(roomId) } }
+        );
+
+        // Return updated room
+        return this.findOne(roomId, accountId);
+    }
+
+    async removeOccupant(roomId: string, tenantId: string, accountId: string): Promise<any> {
+        this.logger.log(`Removing occupant ${tenantId} from room ${roomId}`);
+        
+        const room = await this.roomModel
+            .findOne({
+                _id: new Types.ObjectId(roomId),
+                accountId: new Types.ObjectId(accountId),
+            })
+            .exec();
+
+        if (!room) {
+            throw new NotFoundException('Room not found');
+        }
+
+        const tenantObjectId = new Types.ObjectId(tenantId);
+        
+        // Remove tenant from occupants array
+        await this.roomModel.updateOne(
+            { _id: new Types.ObjectId(roomId) },
+            { $pull: { occupants: tenantObjectId } }
+        );
+
+        // Clear tenant's roomId if it matches this room
+        await this.tenantModel.updateOne(
+            { _id: tenantObjectId, roomId: new Types.ObjectId(roomId) },
+            { $unset: { roomId: '' } }
+        );
+
+        // Return updated room
+        return this.findOne(roomId, accountId);
+    }
+
     private toListResponse(room: RoomDocument): any {
         return {
             id: room._id.toString(),
@@ -232,6 +322,25 @@ export class RoomsService {
     }
 
     private toDetailResponse(room: RoomDocument): any {
+        // Handle populated occupants
+        const occupants = room.occupants ? (room.occupants as any[]).map((occ: any) => {
+            if (!occ) {
+                return null;
+            }
+            if (occ && typeof occ === 'object' && occ.fullName) {
+                // Populated tenant
+                return {
+                    id: occ._id?.toString() || occ.id,
+                    fullName: occ.fullName,
+                    phone: occ.phone,
+                };
+            }
+            // Just ObjectId (should not happen if populated correctly, but handle for safety)
+            return {
+                id: occ.toString ? occ.toString() : occ,
+            };
+        }).filter((occ: any) => occ !== null) : [];
+
         return {
             id: room._id.toString(),
             name: room.name,
@@ -244,6 +353,7 @@ export class RoomsService {
             note: room.note,
             meterReadings: room.meterReadings,
             deposit: room.deposit,
+            occupants: occupants,
         };
     }
 

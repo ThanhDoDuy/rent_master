@@ -21,6 +21,9 @@ export class Tenant {
     @Prop({ required: false })
     documentNumber?: string;
 
+    @Prop({ type: Types.ObjectId, required: false, ref: 'Room' })
+    roomId?: Types.ObjectId; // Room mà tenant đang ở
+
     // createdAt and updatedAt are automatically added by timestamps: true
 }
 

@@ -80,8 +80,11 @@ export class TenantsService {
 
         return tenants.map((tenant: TenantDocument) => {
             const tenantId = tenant._id.toString();
+            // Check if tenant has active contract OR has roomId (from occupants or contract)
             const hasActiveContract = tenantRoomMap.has(tenantId);
-            return this.toListResponse(tenant, hasActiveContract);
+            const hasRoom = tenant.roomId && (!excludeRoomId || tenant.roomId.toString() !== excludeRoomId);
+            const isUnavailable = hasActiveContract || hasRoom;
+            return this.toListResponse(tenant, isUnavailable);
         });
     }
 

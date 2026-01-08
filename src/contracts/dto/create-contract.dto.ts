@@ -12,5 +12,9 @@ export class CreateContractDto {
     @IsDateString()
     @IsNotEmpty()
     endDate: string;
+
+    @IsString()
+    @IsNotEmpty()
+    tenantId: string; // PRIMARY tenant ID (required)
 }
 

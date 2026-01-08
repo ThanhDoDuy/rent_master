@@ -40,11 +40,13 @@ export enum ErrorCode {
   // Room errors (ROOM_*)
   ROOM_IN_USE = 'ROOM_IN_USE',
   ROOM_NAME_DUPLICATE = 'ROOM_NAME_DUPLICATE',
+  ROOM_OCCUPANT_ALREADY_EXISTS = 'ROOM_OCCUPANT_ALREADY_EXISTS',
 
   // Tenant errors (TENANT_*)
   TENANT_HAS_CONTRACT_HISTORY = 'TENANT_HAS_CONTRACT_HISTORY',
   TENANT_PHONE_DUPLICATE = 'TENANT_PHONE_DUPLICATE',
   TENANT_DOCUMENT_DUPLICATE = 'TENANT_DOCUMENT_DUPLICATE',
+  TENANT_ALREADY_HAS_ROOM = 'TENANT_ALREADY_HAS_ROOM',
 
   // Contract errors (CONTRACT_*)
   CONTRACT_ROOM_ALREADY_ACTIVE = 'CONTRACT_ROOM_ALREADY_ACTIVE',
@@ -102,10 +104,12 @@ export const ErrorMessages: Record<ErrorCode, string> = {
 
   [ErrorCode.ROOM_IN_USE]: 'Phòng đang được sử dụng (có hợp đồng)',
   [ErrorCode.ROOM_NAME_DUPLICATE]: 'Tên phòng đã tồn tại trong dãy trọ này. Vui lòng xóa phòng cũ trước khi tạo mới.',
+  [ErrorCode.ROOM_OCCUPANT_ALREADY_EXISTS]: 'Người này đã có trong danh sách người trọ chung',
 
   [ErrorCode.TENANT_HAS_CONTRACT_HISTORY]: 'Không thể xóa tenant đã có lịch sử hợp đồng',
   [ErrorCode.TENANT_PHONE_DUPLICATE]: 'Số điện thoại đã tồn tại trong hệ thống',
   [ErrorCode.TENANT_DOCUMENT_DUPLICATE]: 'Số giấy tờ đã tồn tại trong hệ thống',
+  [ErrorCode.TENANT_ALREADY_HAS_ROOM]: 'Người thuê này đã có phòng. Vui lòng xóa phòng hiện tại trước khi thêm vào phòng mới',
 
   [ErrorCode.CONTRACT_ROOM_ALREADY_ACTIVE]: 'Phòng đã có hợp đồng đang hoạt động',
   [ErrorCode.CONTRACT_ROOM_HAS_CONTRACT]: 'Phòng đã có hợp đồng. Vui lòng hoàn tất hoặc hủy hợp đồng hiện tại trước khi tạo mới',
